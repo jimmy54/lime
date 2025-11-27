@@ -29,6 +29,7 @@ def keys_to_pinyin(keys: str) -> str:
 class Candidate(TypedDict):
     word: str
     score: float
+    pinyin: List[str]
 
 
 # 使用 Beam Search 生成候选词，拼音拆分基于候选词
@@ -47,11 +48,13 @@ def beam_search_generate(
     inputs = tokenizer(prompt, return_tensors="pt")
 
     # 初始化 Beam Search 队列
-    beam: List[Tuple[float, str, str, List[Tuple[str, float]]]] = [
-        (1.0, "", pinyin_input, [])
-    ]  # (prob, context, remaining_pinyin, token_tails)
+    beam: List[Tuple[float, str, str, List[Tuple[str, float]], List[str]]] = [
+        (1.0, "", pinyin_input, [], [])
+    ]  # (prob, context, remaining_pinyin, token_tails, matched_pinyin)
 
-    final_candidates: List[Tuple[float, str]] = []
+    final_candidates: List[
+        Tuple[float, str, List[str]]
+    ] = []
 
     run_count = 0
 
@@ -59,12 +62,11 @@ def beam_search_generate(
         run_count += 1
         print(run_count)
         next_beam = []
-        for prob, context, remaining_pinyin, token_tails in beam:
+        for prob, context, remaining_pinyin, token_tails, matched_pinyin in beam:
             if not remaining_pinyin:  # 如果拼音已经全部匹配完
-                final_candidates.append((prob, context))
+                final_candidates.append((prob, context, matched_pinyin))
                 continue
 
-            # print(context, token_tails, prob)
             if token_tails:  # 如果有未处理的 token_tail
                 for (
                     token_tail,
@@ -87,6 +89,7 @@ def beam_search_generate(
                             new_remaining_pinyin,
                             new_token_tail,
                             token_tail_prob,
+                            matched_pinyin + [token_pinyin[0]],
                         )
                 continue
 
@@ -123,6 +126,7 @@ def beam_search_generate(
                         new_remaining_pinyin,
                         new_token_tail,
                         token_prob,
+                        matched_pinyin + [token_pinyin[0]],
                     )
 
         # 按概率排序并截取 Beam Width 个最优结果
@@ -131,8 +135,8 @@ def beam_search_generate(
 
     # 提取最终候选词
     candidates: List[Candidate] = []
-    for prob, tokens in final_candidates:
-        candidates.append({"word": tokens, "score": prob})
+    for prob, tokens, matched_pinyin in final_candidates:
+        candidates.append({"word": tokens, "score": prob, "pinyin": matched_pinyin})
 
     # 按得分排序并返回 Top-K
     candidates.sort(key=lambda x: x["score"], reverse=True)
@@ -152,12 +156,13 @@ def clear_commit():
 
 
 def add_to_beam(
-    next_beam: List[Tuple[float, str, str, List[Tuple[str, float]]]],
+    next_beam: List[Tuple[float, str, str, List[Tuple[str, float]], List[str]]],
     new_prob: float,
     new_context: str,
     new_remaining_pinyin: str,
     new_token_tail: str,
     token_prob: float,
+    new_matched_pinyin: List[str],
 ):
     """
     将新路径添加到 Beam 中，检查是否存在相同的 context，
@@ -169,6 +174,7 @@ def add_to_beam(
         existing_context,
         existing_remaining_pinyin,
         existing_token_tails,
+        existing_matched_pinyin,
     ) in enumerate(next_beam):
         if existing_context == new_context:
             if new_token_tail:
@@ -181,6 +187,7 @@ def add_to_beam(
                         existing_context,
                         existing_remaining_pinyin,
                         [(new_token_tail, token_prob)],
+                        existing_matched_pinyin,
                     )
             elif new_prob > existing_prob:  # 如果新路径的概率更大，替换
                 next_beam[i] = (
@@ -188,6 +195,7 @@ def add_to_beam(
                     new_context,
                     new_remaining_pinyin,
                     [(new_token_tail, token_prob)] if new_token_tail else [],
+                    new_matched_pinyin,
                 )
             return
 
@@ -198,6 +206,7 @@ def add_to_beam(
             new_context,
             new_remaining_pinyin,
             [(new_token_tail, token_prob)] if new_token_tail else [],
+            new_matched_pinyin,
         )
     )
 
