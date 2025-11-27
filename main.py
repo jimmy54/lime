@@ -32,7 +32,7 @@ def filter_candidates_by_pinyin(candidates: List[Dict[str, float]], pinyin_input
     return filtered_candidates
 
 # 修改生成候选词逻辑，使用用户上下文作为 prompt
-def generate_candidates(pinyin_input: str, top_k: int = 50) -> List[Dict[str, float]]:
+def generate_candidates(pinyin_input: str, top_k: int = 500) -> List[Dict[str, float]]:
     # 使用用户上下文作为 prompt
     prompt = ''.join(user_context)
     inputs = tokenizer(prompt, return_tensors="pt")
