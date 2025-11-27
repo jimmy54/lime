@@ -1,4 +1,4 @@
-from main import keys_to_pinyin, beam_search_generate, commit
+from main import keys_to_pinyin, beam_search_generate, commit, clear_commit
 from pypinyin import lazy_pinyin
 
 from typing import List
@@ -36,6 +36,9 @@ def test_text_offset(test_text: str):
 
 if __name__ == "__main__":
     # 示例测试
-    commit("测试补全引擎")
-    test_text = "测试成功"
-    test_text_offset(test_text)
+    # commit("测试补全引擎")
+    # test_text = "测试成功"
+    # test_text_offset(test_text)
+
+    clear_commit()
+    test_text_offset("聪明的输入法")
