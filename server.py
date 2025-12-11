@@ -1,6 +1,8 @@
+from functools import wraps
+from key import verify_key
 from main import keys_to_pinyin, beam_search_generate, commit, clear_commit, single_ci
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify,abort
 from typing import List, Dict
 
 
@@ -8,9 +10,17 @@ from typing import List, Dict
 print("初始化网络服务器")
 app = Flask(__name__)
 
+def require_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        b= request.headers.get('Authorization','')[len('Bearer '):]
+        if not verify_key(b):abort(403)
+        return f(*args, **kwargs)
+    return decorated
 
 # API: 获取候选词
 @app.route("/candidates", methods=["POST"])
+@require_auth
 def get_candidates() -> Dict[str, List[Dict[str, float]]]:
     data = request.json
     keys: str = data.get("keys", "")  # type: ignore
@@ -24,6 +34,7 @@ def get_candidates() -> Dict[str, List[Dict[str, float]]]:
 
 # API: 获取长句
 @app.route("/sentence", methods=["POST"])
+@require_auth
 def get_sentence() -> Dict[str, List[Dict[str, float]]]:
     data = request.json
     keys: str = data.get("keys", "")  # type: ignore
@@ -37,6 +48,7 @@ def get_sentence() -> Dict[str, List[Dict[str, float]]]:
 
 # API: 提交文字
 @app.route("/commit", methods=["POST"])
+@require_auth
 def commit_text() -> Dict[str, List[str]]:
     data = request.json
     text = data.get("text", "")  # type: ignore

@@ -34,12 +34,19 @@ uv run test_engine.py
 uv run server.py
 ```
 
+创建密钥，一定程度上防止被滥用或隐式泄露
+
+```shell
+uv run key.py
+```
+
 可以发送按键让引擎分析
 
 ```shell
 curl --request POST \
   --url http://127.0.0.1:5000/candidates \
   --header 'content-type: application/json' \
+  --header 'Authorization: Bearer your key' \
   --data '{
   "keys": "nihaoshijie",
   "pre_str": ""
