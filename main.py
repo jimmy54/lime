@@ -18,6 +18,7 @@ class Candidate(TypedDict):
     word: str
     score: float
     pinyin: Pinyin
+    remainkeys: List[str]
 
 
 BeamList = List[
@@ -38,7 +39,7 @@ BeamList = List[
 model_name = "../Qwen2-0.5B-Instruct-GGUF/qwen2-0_5b-instruct-q4_0.gguf"
 print("加载模型", model_name)
 
-llm = Llama(model_path=model_name, verbose=True, logits_all=True)
+llm = Llama(model_path=model_name, logits_all=True)
 print("加载完成")
 
 print("创建拼音索引")
@@ -223,13 +224,90 @@ def beam_search_generate(
     # 提取最终候选词
     candidates: List[Candidate] = []
     for prob, tokens, matched_pinyin in final_candidates:
-        candidates.append({"word": tokens, "score": prob, "pinyin": matched_pinyin})
+        candidates.append(
+            {
+                "word": tokens,
+                "score": float(prob),
+                "pinyin": matched_pinyin,
+                "remainkeys": [],
+            }
+        )
 
     print(run_count, model_count, check_count, add_count)
 
     # 按得分排序并返回 Top-K
     candidates.sort(key=lambda x: x["score"], reverse=True)
     return candidates[:top_k]
+
+
+def single_ci(pinyin_input: PinyinL, pre_str="") -> List[Candidate]:
+    prompt = get_context()
+    pm = prompt + pre_str
+    inputs = llm.tokenize(pm.encode())
+    llm.reset()
+    llm.eval(inputs)
+
+    logits_array = llm._scores[-1]
+
+    logits = np.array(logits_array)
+
+    tk = logits.size
+
+    top_probs, top_indices = get_top_k_logits_numpy(logits, tk)
+
+    firstPinyin = pinyin_input[0].get("py")
+    ftokenid = first_pinyin_token.get(firstPinyin)
+    if ftokenid == None:
+        ftokenid = set()
+
+    c: List[Candidate] = []
+
+    for i in range(top_indices.size):
+        token_prob = top_probs[i]
+
+        token_id = top_indices[i]
+        if not (token_id in ftokenid):
+            continue
+        try:
+            token: str = llm.detokenize([token_id]).decode()
+        except:
+            continue
+
+        if len(token) < 1:
+            continue
+        if token.startswith("\t"):
+            continue
+        if token.startswith("\n"):
+            continue
+        if token.startswith(" "):
+            continue
+
+        token_pinyin = token_pinyin_map.get(int(token_id))
+        if not (token_pinyin):
+            continue
+
+        pyeq = True
+        for [_i, p] in enumerate(token_pinyin):
+            if len(pinyin_input) <= _i:
+                pyeq = False
+                break
+            if pinyin_input[_i]["py"] != p:
+                pyeq = False
+                break
+        if pyeq:
+            if token != token_pinyin[0]:
+                c.append(
+                    {
+                        "pinyin": token_pinyin,
+                        "score": float(token_prob),
+                        "word": token,
+                        "remainkeys": list(
+                            map(lambda x: x["key"], pinyin_input[len(token_pinyin) :])
+                        ),
+                    }
+                )
+    c.sort(key=lambda x: len(x["word"]), reverse=True)
+    return c
 
 
 def commit(text: str):

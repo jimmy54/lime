@@ -1,4 +1,4 @@
-from main import keys_to_pinyin, beam_search_generate, commit, clear_commit
+from main import keys_to_pinyin, beam_search_generate, commit, clear_commit, single_ci
 
 from flask import Flask, request, jsonify
 from typing import List, Dict
@@ -12,6 +12,19 @@ app = Flask(__name__)
 # API: 获取候选词
 @app.route("/candidates", methods=["POST"])
 def get_candidates() -> Dict[str, List[Dict[str, float]]]:
+    data = request.json
+    keys: str = data.get("keys", "")  # type: ignore
+    pre_str: str = data.get("pre_str", "")  # type: ignore
+
+    pinyin_input = keys_to_pinyin(keys)
+    candidates = single_ci(pinyin_input, pre_str=pre_str)
+
+    return jsonify({"candidates": candidates})  # type: ignore
+
+
+# API: 获取长句
+@app.route("/sentence", methods=["POST"])
+def get_sentence() -> Dict[str, List[Dict[str, float]]]:
     data = request.json
     keys: str = data.get("keys", "")  # type: ignore
     pre_str: str = data.get("pre_str", "")  # type: ignore

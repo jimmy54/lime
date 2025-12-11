@@ -1,4 +1,5 @@
-from main import keys_to_pinyin, beam_search_generate, commit, clear_commit
+import time
+from main import keys_to_pinyin, beam_search_generate, commit, clear_commit, single_ci
 from pypinyin import lazy_pinyin
 
 
@@ -10,26 +11,33 @@ def test_text_offset(test_text: str):
     """
     print(f"测试文本: {test_text}")
 
-    # 转换为拼音
-    pinyin_input = keys_to_pinyin(" ".join(lazy_pinyin(test_text)))
-    print(f"转换为拼音: {pinyin_input}")
+    offset = 0
+    src_t = test_text
+    t = ""
+    py = " ".join(lazy_pinyin(src_t))
 
-    # 调用补全引擎生成候选词
-    candidates = beam_search_generate(pinyin_input)
-    print("生成的候选词:")
-    for idx, candidate in enumerate(candidates):
-        print(f"{idx}: {candidate}")
+    start_time = time.time()
 
-    # 计算偏移量
-    offsets = [
-        idx
-        for idx, candidate in enumerate(candidates)
-        if candidate["word"] == test_text
-    ]
-    if offsets:
-        print(f'文本 "{test_text}" 在候选中的偏移量: {offsets[0]}')
-    else:
-        print(f'文本 "{test_text}" 不在候选中')
+    while len(py) > 0:
+        pinyin_input = keys_to_pinyin(py)
+        candidates = single_ci(pinyin_input, pre_str=t)
+        has = False
+
+        for idx, candidate in enumerate(candidates):
+            if src_t.startswith(candidate["word"]):
+                has = True
+                src_t = src_t[len(candidate["word"]) :]
+                t = t + candidate["word"]
+                py = " ".join(candidate["remainkeys"])
+                print(idx, candidate["word"])
+                offset = offset + idx
+                break
+        if has == False:
+            print("找不到", t)
+            break
+
+    ttt = time.time() - start_time
+    print(ttt, ttt / len(test_text))
 
 
 if __name__ == "__main__":
