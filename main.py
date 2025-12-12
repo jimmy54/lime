@@ -274,7 +274,7 @@ def beam_search_generate(
 
 
 def single_ci(pinyin_input: PinyinL, pre_str="") -> Result:
-    if not pinyin_input:
+    if not pinyin_input or not pinyin_input[0]:
         return {"candidates": []}
     prompt = get_context()
     pm = prompt + pre_str
