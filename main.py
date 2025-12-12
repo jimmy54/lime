@@ -1,4 +1,4 @@
-import string
+import time
 from pypinyin import lazy_pinyin
 from llama_cpp import Llama
 import numpy as np
@@ -278,9 +278,13 @@ def single_ci(pinyin_input: PinyinL, pre_str="") -> Result:
         return {"candidates": []}
     prompt = get_context()
     pm = prompt + pre_str
+
+    devTime = time.time()
     inputs = llm.tokenize(pm.encode())
+    devTimeTk = time.time()
     llm.reset()
     llm.eval(inputs)
+    devTimeRun = time.time()
 
     logits_array = llm._scores[-1]
 
@@ -344,6 +348,20 @@ def single_ci(pinyin_input: PinyinL, pre_str="") -> Result:
                     }
                 )
     c.sort(key=lambda x: len(x["word"]), reverse=True)
+
+    devTimePy = time.time()
+
+    print(
+        "token长度",
+        len(inputs),
+        "token耗时",
+        devTimeTk - devTime,
+        "运行耗时",
+        devTimeRun - devTimeTk,
+        "检索",
+        devTimePy - devTimeRun,
+    )
+
     if not c:
         print("is empty")
     return {"candidates": c}
