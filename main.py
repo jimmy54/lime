@@ -1,4 +1,3 @@
-import time
 from pypinyin import lazy_pinyin
 from llama_cpp import Llama
 import numpy as np
@@ -86,6 +85,7 @@ pre_context = "下面的内容主题多样"
 user_context = []
 
 to_run: List[int] = []
+last_result: np.ndarray | None = None
 
 
 class FuzzyConfig:
@@ -383,17 +383,11 @@ def beam_search_generate(
 def single_ci(pinyin_input: PinyinL, pre_str="") -> Result:
     if not pinyin_input or not pinyin_input[0]:
         return {"candidates": []}
-    pm = pre_str
 
-    devTime = time.time()
-    inputs = to_run + llm.tokenize(pm.encode())
-    devTimeTk = time.time()
-    llm.eval(inputs)
-    devTimeRun = time.time()
+    if last_result is None:
+        return {"candidates": []}
 
-    logits_array = llm._scores[-1]
-
-    logits = np.array(logits_array)
+    logits = last_result
 
     tk = logits.size
 
@@ -454,17 +448,9 @@ def single_ci(pinyin_input: PinyinL, pre_str="") -> Result:
                 )
     c.sort(key=lambda x: len(x["word"]), reverse=True)
 
-    devTimePy = time.time()
-
     print(
         "token长度",
         llm.n_tokens,
-        "token耗时",
-        devTimeTk - devTime,
-        "运行耗时",
-        devTimeRun - devTimeTk,
-        "检索",
-        devTimePy - devTimeRun,
     )
 
     if not c:
@@ -476,6 +462,10 @@ def commit(text: str):
     user_context.append(text)
     global to_run
     to_run = llm.tokenize(text.encode())
+    llm.eval(to_run)
+    global last_result
+    logits_array = llm._scores[-1]
+    last_result = np.array(logits_array)
     return user_context
 
 
@@ -487,6 +477,8 @@ def clear_commit():
     user_context.clear()
     llm.reset()
     to_run.clear()
+    global last_result
+    last_result = None
     init_ctx()
 
 
@@ -531,6 +523,9 @@ def init_ctx():
     to_run = inputs
     llm.reset()
     llm.eval(inputs)
+    global last_result
+    logits_array = llm._scores[-1]
+    last_result = np.array(logits_array)
 
 
 init_ctx()
