@@ -21,7 +21,7 @@ def test_text_offset(test_text: List[str]):
 
         while len(py) > 0:
             pinyin_input = keys_to_pinyin(py)
-            candidates = single_ci(pinyin_input, pre_str=t)
+            candidates = single_ci(pinyin_input)
             has = False
 
             for idx, candidate in enumerate(candidates["candidates"]):

@@ -416,7 +416,7 @@ def beam_search_generate(
     return candidates[:top_k]
 
 
-def single_ci(pinyin_input: PinyinL, pre_str="") -> Result:
+def single_ci(pinyin_input: PinyinL) -> Result:
     if not pinyin_input or not pinyin_input[0]:
         return {"candidates": []}
 
@@ -482,7 +482,7 @@ def single_ci(pinyin_input: PinyinL, pre_str="") -> Result:
                         "score": float(token_prob),
                         "word": token,
                         "remainkeys": rmpy,
-                        "preedit": pre_str + " ".join(token_pinyin + rmpy),
+                        "preedit": " ".join(token_pinyin + rmpy),
                         "consumedkeys": len("".join(matchpy)),
                     }
                 )

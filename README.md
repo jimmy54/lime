@@ -42,8 +42,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --header 'Authorization: Bearer your key' \
   --data '{
-  "keys": "nihaoshijie",
-  "pre_str": ""
+  "keys": "nihaoshijie"
 }'
 ```
 

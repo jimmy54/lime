@@ -35,10 +35,9 @@ def require_auth(f):
 def get_candidates_post() -> Dict[str, List[Dict[str, float]]]:
     data = request.json
     keys: str = data.get("keys", "")  # type: ignore
-    pre_str: str = data.get("pre_str", "")  # type: ignore
 
     pinyin_input = keys_to_pinyin(keys)
-    result = single_ci(pinyin_input, pre_str=pre_str)
+    result = single_ci(pinyin_input)
 
     return jsonify(result)  # type: ignore
 
@@ -49,14 +48,12 @@ def get_candidates_post() -> Dict[str, List[Dict[str, float]]]:
 def get_candidates_get() -> Dict[str, List[Dict[str, float]]]:
     # 从 URL 参数获取数据
     keys: str = request.args.get("keys", "")
-    pre_str: str = request.args.get("pre_str", "")
 
     # URL 解码参数
     keys = unquote(keys)
-    pre_str = unquote(pre_str)
 
     pinyin_input = keys_to_pinyin(keys)
-    result = single_ci(pinyin_input, pre_str=pre_str)
+    result = single_ci(pinyin_input)
 
     return jsonify(result)  # type: ignore
 
