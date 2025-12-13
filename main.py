@@ -538,6 +538,7 @@ def commit(text: str, update=False, new=True):
             new = True
     if new:
         last_context_data["context"] = ""
+        new_text = text
 
     if not new_text:
         return user_context
