@@ -1,6 +1,6 @@
 from functools import wraps
 from key import verify_key
-from main import beam_search_generate, commit, clear_commit, single_ci
+from main import beam_search_generate, commit, clear_commit, get_user_data, single_ci
 from utils.keys_to_pinyin import keys_to_pinyin
 
 from flask import Flask, request, jsonify, abort
@@ -152,6 +152,13 @@ def clear_context_get() -> Dict[str, str]:
 def clear_context_post() -> Dict[str, str]:
     clear_commit()
     return jsonify({"message": "Context cleared successfully"})  # type: ignore
+
+
+# API: 用户数据，用于调试
+@app.route("/userdata", methods=["GET"])
+@require_auth
+def user_data_get():
+    return jsonify(get_user_data())  # type: ignore
 
 
 if __name__ == "__main__":

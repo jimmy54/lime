@@ -1,5 +1,4 @@
 import math
-from pickletools import pyint
 from llama_cpp import Llama
 import numpy as np
 import threading
@@ -75,6 +74,7 @@ token_pinyin_map: Dict[int, List[List[str]]] = {}
 first_pinyin_token: Dict[str, Set[int]] = {}
 
 for token_id in range(llm.n_vocab()):
+    token_id = int(token_id)
     try:
         token = llm.detokenize([token_id]).decode()
     except:
@@ -193,7 +193,7 @@ def beam_search_generate(
                     break
                 new_prob = prob * token_prob  # 累乘概率
 
-                token_id = top_indices[i]
+                token_id = int(top_indices[i])
                 if not (token_id in ftokenid):
                     continue
                 try:
@@ -321,7 +321,7 @@ def single_ci(pinyin_input: PinyinL) -> Result:
     for i in range(top_indices.size):
         token_prob = top_probs[i]
 
-        token_id = top_indices[i]
+        token_id = int(top_indices[i])
         if not (token_id in ftokenid):
             continue
         try:
@@ -574,6 +574,30 @@ trim_context = Debounce(10, try_trim_context)
 
 def stop_all():
     trim_context.cancel()
+
+
+class UserData(TypedDict):
+    words: Dict[int, List[int]]
+    context: List[str]
+
+
+def get_user_data():
+    n: Dict[int, List[int]] = {}
+    for i in y用户词:
+        n[i] = list(y用户词[i])
+    return UserData(words=n, context=user_context)
+
+
+def load_user_data(data: UserData):
+    if user_context or len(y用户词) > 0:
+        print("已经存在用户数据")
+        return
+    user_context.clear()
+    for i in data["context"]:
+        user_context.append(i)
+    y用户词.clear()
+    for i in data["words"]:
+        y用户词[i] = set(data["words"][i])
 
 
 def init_ctx():
