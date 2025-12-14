@@ -1,11 +1,14 @@
+# Rime schema configuration for MSPY (Double Pinyin) with cloud candidates
+# 微软双拼方案 + 云输入
+
 schema:
     schema_id: llm
-    name: "llm拼音"
+    name: "大模型拼音"
     version: "1.0"
     author:
         - xsf https://github.com/xushengfeng/
     description: |
-        通过
+        通过大语言模型优化拼音
 
 switches:
     - name: ascii_mode
@@ -36,7 +39,6 @@ engine:
     translators:
         - lua_translator@*cloud_pinyin_mspy*translator
         - punct_translator
-        - reverse_lookup_translator
 
 translator:
     dictionary: ""
@@ -47,7 +49,7 @@ translator:
     enable_encoder: false
 
 speller:
-    alphabet: zyxwvutsrqponmlkjihgfedcba
+    alphabet: zyxwvutsrqponmlkjihgfedcba`
     initials: "abcdefghijklmnopqrstuvwxyz;"
     delimiter: " '"
     max_code_length: 0
@@ -62,7 +64,6 @@ recognizer:
     import_preset: default
     patterns:
         punct: "^/([0-9]0?)$"
-        reverse_lookup: "`[a-z]*'?$"
 
 menu:
     page_size: 5

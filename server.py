@@ -37,6 +37,8 @@ def get_candidates_post() -> Dict[str, List[Dict[str, float]]]:
     data = request.json
     keys: str = data.get("keys", "")  # type: ignore
 
+    print(keys)
+
     pinyin_input = keys_to_pinyin(keys)
     result = single_ci(pinyin_input)
 
