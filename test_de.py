@@ -30,7 +30,7 @@ if __name__ == "__main__":
             text = candidate["word"]
             if src_t == text:
                 has = True
-                if text in ["他", "她", "它", "那", "哪", "的", "地", "得"]:
+                if text in ["他", "她", "它", "那", "哪", "的", "地", "得", "在", "再"]:
                     count = count + 1
                     offset = offset + idx
                     if idx == 0:
