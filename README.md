@@ -28,6 +28,8 @@ git clone https://www.modelscope.cn/unsloth/Qwen3-0.6B-GGUF.git
 uv run server.py
 ```
 
+默认启用自然码双拼，`server.py`里把`keys_to_pinyin`函数都加上`shuangpin=False`参数即可关闭
+
 创建密钥，一定程度上防止被滥用或隐私泄露
 
 ```shell
