@@ -1,11 +1,32 @@
 from functools import wraps
+from os import path
+from assets.pinyin.script.dict import get_dict
 from key import verify_key
-from main import beam_search_generate, commit, clear_commit, get_user_data, single_ci
+from main import (
+    add_user_word,
+    beam_search_generate,
+    commit,
+    clear_commit,
+    get_user_data,
+    single_ci,
+)
 from utils.keys_to_pinyin import keys_to_pinyin
 
 from flask import Flask, request, jsonify, abort
 from typing import List, Dict
 from urllib.parse import unquote
+
+dict_dir = ""
+dict_files = []
+if dict_dir and dict_files:
+    for i in dict_files:
+        pa = path.join(dict_dir, i)
+        print("加载词典", pa)
+        for l in get_dict(pa):
+            w = l.split("\t")
+            if len(w) > 0 and len(w[0]) >= 3:
+                add_user_word(w[0])
+
 
 # 初始化 Flask 应用
 print("初始化网络服务器")
