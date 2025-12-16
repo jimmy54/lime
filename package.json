@@ -1,5 +1,6 @@
 {
 	"dependencies": {
+		"hono": "^4.11.1",
 		"node-llama-cpp": "^3.14.5",
 		"pinyin-pro": "^3.27.0"
 	}

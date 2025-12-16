@@ -52,7 +52,7 @@ function translator.init(env)
     if commit then
       fetch_text(base_url .. "/commit", {
         headers = headers,
-        method = "post",
+        method = "POST",
         source = json.encode({
           text = commit.text,
           update = true,
@@ -81,7 +81,7 @@ function translator.func(input, seg, env)
     if had_select_text ~= '' then
       fetch_text(base_url .. "/commit", {
         headers = headers,
-        method = "post",
+        method = "POST",
         source = json.encode({
           text = had_select_text,
           update = true,
@@ -94,7 +94,7 @@ function translator.func(input, seg, env)
   local qp = input
   local code, reply = fetch_text(base_url .. "/candidates", {
     headers = headers,
-    method = "post",
+    method = "POST",
     source = json.encode({
       keys = qp
     })

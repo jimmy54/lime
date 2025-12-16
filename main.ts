@@ -13,7 +13,7 @@ type Candidate = {
 	word: string;
 	score: number;
 	pinyin: string[];
-	remainkes: string[];
+	remainkeys: string[];
 	preedit: string;
 	consumedkeys: number;
 };
@@ -79,6 +79,8 @@ export async function commit(text: string, update = false, newT = true) {
 	last_result = res.at(-1)?.next.probabilities;
 
 	// todo trim context reset
+
+	return user_context;
 }
 
 function add_user_word(w: string) {
@@ -131,7 +133,7 @@ export function single_ci(pinyin_input: PinyinL): { candidates: Candidate[] } {
 			pinyin: token_pinyin.map((v) => v.py),
 			score: token_prob,
 			word: token,
-			remainkes: rmpy,
+			remainkeys: rmpy,
 			preedit:
 				token_pinyin.map((v) => v.preeditShow).join(" ") +
 				(rmpy.length ? " " : ""),

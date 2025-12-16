@@ -2,6 +2,8 @@
   "version": "5",
   "specifiers": {
     "jsr:@std/assert@1.0.16": "1.0.16",
+    "jsr:@std/cli@*": "1.0.21",
+    "jsr:@std/encoding@*": "1.0.7",
     "jsr:@std/internal@^1.0.12": "1.0.12"
   },
   "jsr": {
@@ -11,6 +13,12 @@
         "jsr:@std/internal"
       ]
     },
+    "@std/cli@1.0.21": {
+      "integrity": "cd25b050bdf6282e321854e3822bee624f07aca7636a3a76d95f77a3a919ca2a"
+    },
+    "@std/encoding@1.0.7": {
+      "integrity": "f631247c1698fef289f2de9e2a33d571e46133b38d042905e3eac3715030a82d"
+    },
     "@std/internal@1.0.12": {
       "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
     }
@@ -18,6 +26,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:hono@^4.11.1",
         "npm:node-llama-cpp@^3.14.5",
         "npm:pinyin-pro@^3.27.0"
       ]
