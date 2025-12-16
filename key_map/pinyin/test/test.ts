@@ -3,6 +3,7 @@ import { spilt_pinyin } from "../split_pinyin.ts";
 import { generate_fuzzy_pinyin } from "../fuzzy_pinyin.ts";
 import { keys_to_pinyin } from "../keys_to_pinyin.ts";
 import { assert } from "jsr:@std/assert@1.0.16/assert";
+import { load_pinyin } from "../gen_zi_pinyin.ts";
 
 Deno.test("split pinyin", () => {
 	assertEquals(spilt_pinyin("ni"), ["n", "i"]);
@@ -48,4 +49,10 @@ Deno.test("双拼", () => {
 		[{ key: "xx", py: "xie", preeditShow: "xie" }],
 		[{ key: "xx", py: "xie", preeditShow: "xie" }],
 	]);
+});
+
+Deno.test("字转化拼音", () => {
+	const pinyin = load_pinyin();
+	const x = pinyin("你好");
+	assertEquals(x, [["ni"], ["hao"]]);
 });
