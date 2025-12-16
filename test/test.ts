@@ -1,0 +1,45 @@
+import { pinyin } from "pinyin-pro";
+import { keys_to_pinyin } from "../key_map/pinyin/keys_to_pinyin.ts";
+import { commit, single_ci } from "../main.ts";
+
+async function test_text_offset(test_text: string[]) {
+	let offset = 0;
+	const start_time = Date.now();
+	for (const _src_t of test_text) {
+		let t = "";
+		let py = pinyin(_src_t, { toneType: "none" }).replaceAll(" ", "");
+
+		let src_t = _src_t;
+		while (py.length > 0) {
+			const pinyin_input = keys_to_pinyin(py);
+			const candidates = await single_ci(pinyin_input);
+			let has = false;
+
+			for (const [idx, candidate] of candidates.candidates.entries()) {
+				const text = candidate.word;
+				if (src_t.startsWith(text)) {
+					has = true;
+					src_t = src_t.slice(text.length);
+					t = t + text;
+					py = candidate.remainkeys.join("");
+					console.log(idx, text);
+					offset = offset + idx;
+					commit(text);
+					break;
+				}
+			}
+			if (has === false) {
+				console.log("找不到", t);
+				break;
+			}
+		}
+	}
+
+	const ttt = Date.now() - start_time;
+	console.log("偏移", offset, ttt, ttt / test_text.length);
+}
+
+const seg = new Intl.Segmenter("zh-Hans", { granularity: "word" });
+
+const l = Array.from(seg.segment("聪明的输入法")).map((v) => v.segment);
+test_text_offset(l);
