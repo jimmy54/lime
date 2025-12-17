@@ -40,6 +40,34 @@ Deno.test("拼音 部分2", () => {
 	assertEquals(x1, { key: "o", py: "ou", preeditShow: "o" });
 });
 
+Deno.test("拼音 部分3", () => {
+	const x = keys_to_pinyin("a").at(-1);
+	assert((x?.length ?? 0) > 0);
+	assertEquals(
+		x?.find((v) => v.py === "a"),
+		{ key: "a", py: "a", preeditShow: "a" },
+	);
+	assertEquals(
+		x?.find((v) => v.py === "ai"),
+		{ key: "a", py: "ai", preeditShow: "a" },
+	);
+	const x1 = keys_to_pinyin("tma", { shuangpin: true }).at(-1);
+	assert((x1?.length ?? 0) > 0);
+	assertEquals(
+		x1?.find((v) => v.py === "a"),
+		{ key: "a", py: "a", preeditShow: "a" },
+	);
+	assertEquals(
+		x1?.find((v) => v.py === "ai"),
+		{ key: "a", py: "ai", preeditShow: "a" },
+	);
+	const x2 = keys_to_pinyin("tmaa", { shuangpin: true }).at(-1);
+	assert((x2?.length ?? 0) > 0);
+	console.log(x2);
+
+	assertEquals(x2?.at(-1), { key: "aa", py: "a", preeditShow: "a" });
+});
+
 Deno.test("拼音 分隔符", () => {
 	const x = keys_to_pinyin("ni'");
 	assertEquals(x, [[{ key: "ni'", py: "ni", preeditShow: "ni" }]]);

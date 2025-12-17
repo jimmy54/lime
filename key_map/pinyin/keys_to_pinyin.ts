@@ -19,9 +19,7 @@ export type PinyinToKeyOptions = {
 	fuzzy?: FuzzyPinyinConfig;
 };
 
-const pinyin_k_l = generate_pinyin()
-	.toSorted((a, b) => b.length - a.length)
-	.filter((i) => i.length > 1); // todo 排除了aoe，后续应该移除
+const pinyin_k_l = generate_pinyin().toSorted((a, b) => b.length - a.length);
 
 const sp_map = generate_shuang_pinyin(pinyin_k_l);
 
@@ -33,7 +31,6 @@ export function keys_to_pinyin(keys: string, op?: PinyinToKeyOptions): PinyinL {
 	const shuangpinMap = op?.shuangpin ? sp_map : {};
 
 	function tryMatch(k: string) {
-		let has = false;
 		const kl: { i: string; pinyin: string }[] = [];
 		for (const i in shuangpinMap) {
 			kl.push({ i, pinyin: shuangpinMap[i] });
@@ -43,7 +40,6 @@ export function keys_to_pinyin(keys: string, op?: PinyinToKeyOptions): PinyinL {
 		}
 		for (const { i, pinyin } of kl) {
 			if (k.startsWith(i)) {
-				has = true;
 				const pinyin_variants = generate_fuzzy_pinyin(pinyin, op?.fuzzy);
 
 				let ni = i;
@@ -60,12 +56,13 @@ export function keys_to_pinyin(keys: string, op?: PinyinToKeyOptions): PinyinL {
 					})),
 				);
 				k = k.slice(ni.length);
+				if (["a", "e", "o", "m", "n"].includes(i)) {
+					return undefined; //即使我们添加了这个单字母拼音，但是还是让它匹配更长的拼音
+				}
 				return k;
 			}
 		}
-		if (!has) {
-			return undefined;
-		}
+		return undefined;
 	}
 
 	let _count = 0;
