@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LIME 调试页面</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .card h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        .input-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .candidates-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .candidate-item {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        .candidate-item:hover {
+            background: #667eea;
+            color: white;
+        }
+        .candidate-item.selected {
+            background: #764ba2;
+            color: white;
+            border-color: #667eea;
+        }
+        .candidate-word {
+            font-weight: 600;
+        }
+        .candidate-pinyin {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-left: 4px;
+        }
+        .candidate-score {
+            font-size: 11px;
+            opacity: 0.5;
+            margin-left: 4px;
+        }
+        .result-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result-box pre {
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            color: #333;
+        }
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+            margin-top: 12px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .context-display {
+            background: #e8f4f8;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 18px;
+            min-height: 50px;
+            color: #333;
+        }
+        .preedit {
+            color: #667eea;
+            font-style: italic;
+        }
+        .tips {
+            font-size: 13px;
+            color: #888;
+            margin-top: 8px;
+        }
+        .tab-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 12px;
+        }
+        .tab-btn {
+            padding: 8px 20px;
+            background: #f5f5f5;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            background: #e0e0e0;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+        }
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .code-preview {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-x: auto;
+        }
+        .response-meta {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .meta-item {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .meta-status {
+            background: #d4edda;
+            color: #155724;
+        }
+        .meta-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .meta-time {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .meta-method {
+            background: #cce5ff;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍋 LIME 调试页面</h1>
+        
+        <!-- 配置区域 -->
+        <div class="card">
+            <h2>⚙️ 配置</h2>
+            <div class="input-row">
+                <div class="form-group">
+                    <label>服务器地址</label>
+                    <input type="text" id="serverUrl" value="http://127.0.0.1:5001" placeholder="http://127.0.0.1:5001">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="apiKey" placeholder="输入你的 API Key">
+                </div>
+                <button class="btn-secondary" onclick="toggleKeyVisibility()">👁️</button>
+            </div>
+            <p class="tips">💡 API Key 会保存在浏览器本地存储中</p>
+        </div>
+
+        <!-- 输入测试区域 -->
+        <div class="card">
+            <h2>⌨️ 拼音输入测试</h2>
+            <div class="form-group">
+                <label>输入拼音（如：nihaoshijie）</label>
+                <input type="text" id="pinyinInput" placeholder="输入拼音字母..." oninput="onPinyinInput()">
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="getCandidates()">获取候选词</button>
+                <button class="btn-secondary" onclick="clearInput()">清空</button>
+            </div>
+            
+            <div id="statusArea"></div>
+            
+            <!-- 候选词展示 -->
+            <div id="candidatesArea" style="display:none;">
+                <h3 style="margin-top:16px; color:#333;">候选词（点击选择）</h3>
+                <div class="candidates-list" id="candidatesList"></div>
+            </div>
+        </div>
+
+        <!-- 上下文区域 -->
+        <div class="card">
+            <h2>📝 已输入文字（上下文）</h2>
+            <div class="context-display" id="contextDisplay">
+                <span id="committedText"></span>
+                <span class="preedit" id="preeditText"></span>
+            </div>
+            <div class="button-group">
+                <button class="btn-success" onclick="commitSelected()">提交选中词</button>
+                <button class="btn-secondary" onclick="clearContext()">清空上下文</button>
+            </div>
+        </div>
+
+        <!-- API 测试区域 -->
+        <div class="card">
+            <h2>🔧 API 接口测试</h2>
+            
+            <!-- 标签页切换 -->
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('candidates')">candidates</button>
+                <button class="tab-btn" onclick="switchTab('commit')">commit</button>
+                <button class="tab-btn" onclick="switchTab('userdata')">userdata</button>
+            </div>
+
+            <!-- candidates 接口测试 -->
+            <div id="tab-candidates" class="tab-content active">
+                <div class="form-group">
+                    <label>请求方式</label>
+                    <select id="candidatesMethod" onchange="updateCandidatesPreview()">
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>keys 参数</label>
+                    <input type="text" id="candidatesKeys" placeholder="nihaoshijie" oninput="updateCandidatesPreview()">
+                </div>
+                <div class="form-group">
+                    <label>请求预览</label>
+                    <div class="code-preview" id="candidatesPreview"></div>
+                </div>
+                <button class="btn-primary" onclick="testCandidates()">发送请求</button>
+            </div>
+
+            <!-- commit 接口测试 -->
+            <div id="tab-commit" class="tab-content">
+                <div class="form-group">
+                    <label>请求方式</label>
+                    <select id="commitMethod" onchange="updateCommitPreview()">
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>text 参数（必填）</label>
+                    <input type="text" id="commitText" placeholder="你好世界" oninput="updateCommitPreview()">
+                </div>
+                <div class="form-group">
+                    <label>new 参数（是否新上下文，默认 true）</label>
+                    <select id="commitNew" onchange="updateCommitPreview()">
+                        <option value="true">true</option>
+                        <option value="false">false</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>update 参数（是否更新，默认 false）</label>
+                    <select id="commitUpdate" onchange="updateCommitPreview()">
+                        <option value="false">false</option>
+                        <option value="true">true</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>请求预览</label>
+                    <div class="code-preview" id="commitPreview"></div>
+                </div>
+                <button class="btn-success" onclick="testCommit()">发送请求</button>
+            </div>
+
+            <!-- userdata 接口测试 -->
+            <div id="tab-userdata" class="tab-content">
+                <p class="tips">获取当前用户数据（上下文信息）</p>
+                <div class="form-group">
+                    <label>请求预览</label>
+                    <div class="code-preview">GET /userdata</div>
+                </div>
+                <button class="btn-primary" onclick="testUserdata()">获取用户数据</button>
+            </div>
+        </div>
+
+        <!-- 原始响应区域 -->
+        <div class="card">
+            <h2>📋 原始 API 响应</h2>
+            <div class="response-meta" id="responseMeta"></div>
+            <div class="result-box">
+                <pre id="rawResponse">等待请求...</pre>
+            </div>
+        </div>
+
+        <!-- curl 命令生成 -->
+        <div class="card">
+            <h2>📝 curl 命令</h2>
+            <p class="tips">复制此命令可在终端中测试</p>
+            <div class="result-box">
+                <pre id="curlCommand">选择接口后自动生成...</pre>
+            </div>
+            <button class="btn-secondary" onclick="copyCurl()">复制命令</button>
+        </div>
+    </div>
+
+    <script>
+        // 状态管理
+        let currentCandidates = [];
+        let selectedCandidate = null;
+        let committedText = '';
+
+        // 页面加载时恢复配置
+        window.onload = function() {
+            const savedKey = localStorage.getItem('lime_api_key');
+            const savedUrl = localStorage.getItem('lime_server_url');
+            if (savedKey) document.getElementById('apiKey').value = savedKey;
+            if (savedUrl) document.getElementById('serverUrl').value = savedUrl;
+        };
+
+        // 保存配置
+        function saveConfig() {
+            localStorage.setItem('lime_api_key', document.getElementById('apiKey').value);
+            localStorage.setItem('lime_server_url', document.getElementById('serverUrl').value);
+        }
+
+        // 切换密钥可见性
+        function toggleKeyVisibility() {
+            const input = document.getElementById('apiKey');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // 显示状态
+        function showStatus(message, type) {
+            const area = document.getElementById('statusArea');
+            area.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // 拼音输入时自动获取候选词
+        let inputTimer = null;
+        function onPinyinInput() {
+            clearTimeout(inputTimer);
+            const input = document.getElementById('pinyinInput').value;
+            document.getElementById('preeditText').textContent = input;
+            
+            if (input.length > 0) {
+                inputTimer = setTimeout(getCandidates, 300);
+            } else {
+                document.getElementById('candidatesArea').style.display = 'none';
+            }
+        }
+
+        // 获取候选词
+        async function getCandidates() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const keys = document.getElementById('pinyinInput').value;
+
+            if (!keys) {
+                showStatus('请输入拼音', 'error');
+                return;
+            }
+
+            if (!apiKey) {
+                showStatus('请输入 API Key', 'error');
+                return;
+            }
+
+            saveConfig();
+            showStatus('请求中...', 'loading');
+
+            try {
+                const response = await fetch(`${serverUrl}/candidates`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ keys })
+                });
+
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    showStatus(`错误: ${response.status} - ${data.message || '请求失败'}`, 'error');
+                    document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+                    return;
+                }
+
+                currentCandidates = data.candidates || [];
+                showStatus(`成功获取 ${currentCandidates.length} 个候选词`, 'success');
+                renderCandidates();
+                document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                showStatus(`请求失败: ${error.message}`, 'error');
+                document.getElementById('rawResponse').textContent = error.toString();
+            }
+        }
+
+        // 渲染候选词列表
+        function renderCandidates() {
+            const list = document.getElementById('candidatesList');
+            const area = document.getElementById('candidatesArea');
+            
+            if (currentCandidates.length === 0) {
+                area.style.display = 'none';
+                return;
+            }
+
+            area.style.display = 'block';
+            list.innerHTML = currentCandidates.map((c, i) => `
+                <div class="candidate-item ${selectedCandidate === i ? 'selected' : ''}" 
+                     onclick="selectCandidate(${i})">
+                    <span class="candidate-word">${c.word}</span>
+                    <span class="candidate-pinyin">[${c.pinyin.join(' ')}]</span>
+                    <span class="candidate-score">${(c.score * 100).toFixed(2)}%</span>
+                </div>
+            `).join('');
+        }
+
+        // 选择候选词
+        function selectCandidate(index) {
+            selectedCandidate = index;
+            renderCandidates();
+        }
+
+        // 提交选中的词
+        async function commitSelected() {
+            if (selectedCandidate === null || !currentCandidates[selectedCandidate]) {
+                showStatus('请先选择一个候选词', 'error');
+                return;
+            }
+
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const candidate = currentCandidates[selectedCandidate];
+            const text = candidate.word;
+
+            try {
+                const response = await fetch(`${serverUrl}/commit`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({ text })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    committedText += text;
+                    document.getElementById('committedText').textContent = committedText;
+                    
+                    // 如果有剩余拼音，继续输入
+                    if (candidate.remainkeys && candidate.remainkeys.length > 0) {
+                        document.getElementById('pinyinInput').value = candidate.remainkeys.join('');
+                        onPinyinInput();
+                    } else {
+                        document.getElementById('pinyinInput').value = '';
+                        document.getElementById('preeditText').textContent = '';
+                        document.getElementById('candidatesArea').style.display = 'none';
+                    }
+                    
+                    selectedCandidate = null;
+                    showStatus(`已提交: ${text}`, 'success');
+                } else {
+                    showStatus(`提交失败: ${data.message}`, 'error');
+                }
+
+                document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                showStatus(`提交失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 清空输入
+        function clearInput() {
+            document.getElementById('pinyinInput').value = '';
+            document.getElementById('preeditText').textContent = '';
+            document.getElementById('candidatesArea').style.display = 'none';
+            document.getElementById('statusArea').innerHTML = '';
+            currentCandidates = [];
+            selectedCandidate = null;
+        }
+
+        // 清空上下文
+        function clearContext() {
+            committedText = '';
+            document.getElementById('committedText').textContent = '';
+            showStatus('上下文已清空', 'success');
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            // 数字键选择候选词
+            if (e.key >= '1' && e.key <= '9') {
+                const index = parseInt(e.key) - 1;
+                if (index < currentCandidates.length) {
+                    selectCandidate(index);
+                }
+            }
+            // 空格提交
+            if (e.key === ' ' && selectedCandidate !== null) {
+                e.preventDefault();
+                commitSelected();
+            }
+            // Enter 获取候选词
+            if (e.key === 'Enter' && document.activeElement.id === 'pinyinInput') {
+                getCandidates();
+            }
+        });
+
+        // ========== API 测试功能 ==========
+
+        let currentCurl = '';
+
+        // 切换标签页
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            // 更新预览
+            if (tabName === 'candidates') updateCandidatesPreview();
+            else if (tabName === 'commit') updateCommitPreview();
+            else if (tabName === 'userdata') updateUserdataPreview();
+        }
+
+        // 更新 candidates 请求预览
+        function updateCandidatesPreview() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const method = document.getElementById('candidatesMethod').value;
+            const keys = document.getElementById('candidatesKeys').value || 'nihaoshijie';
+
+            let preview = '';
+            let curl = '';
+
+            if (method === 'POST') {
+                preview = `POST /candidates\n\nHeaders:\n  Content-Type: application/json\n  Authorization: Bearer ${apiKey || '<your-key>'}\n\nBody:\n${JSON.stringify({ keys }, null, 2)}`;
+                curl = `curl --request POST \\\n  --url ${serverUrl}/candidates \\\n  --header 'content-type: application/json' \\\n  --header 'Authorization: Bearer ${apiKey || '<your-key>'}' \\\n  --data '${JSON.stringify({ keys })}'`;
+            } else {
+                preview = `GET /candidates?keys=${encodeURIComponent(keys)}\n\nHeaders:\n  Authorization: Bearer ${apiKey || '<your-key>'}`;
+                curl = `curl --request GET \\\n  --url "${serverUrl}/candidates?keys=${encodeURIComponent(keys)}" \\\n  --header 'Authorization: Bearer ${apiKey || '<your-key>'}'`;
+            }
+
+            document.getElementById('candidatesPreview').textContent = preview;
+            document.getElementById('curlCommand').textContent = curl;
+            currentCurl = curl;
+        }
+
+        // 更新 commit 请求预览
+        function updateCommitPreview() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const method = document.getElementById('commitMethod').value;
+            const text = document.getElementById('commitText').value || '你好世界';
+            const isNew = document.getElementById('commitNew').value === 'true';
+            const update = document.getElementById('commitUpdate').value === 'true';
+
+            let preview = '';
+            let curl = '';
+
+            if (method === 'POST') {
+                const body = { text, new: isNew, update };
+                preview = `POST /commit\n\nHeaders:\n  Content-Type: application/json\n  Authorization: Bearer ${apiKey || '<your-key>'}\n\nBody:\n${JSON.stringify(body, null, 2)}`;
+                curl = `curl --request POST \\\n  --url ${serverUrl}/commit \\\n  --header 'content-type: application/json' \\\n  --header 'Authorization: Bearer ${apiKey || '<your-key>'}' \\\n  --data '${JSON.stringify(body)}'`;
+            } else {
+                const params = new URLSearchParams({ text, new: isNew, update });
+                preview = `GET /commit?${params}\n\nHeaders:\n  Authorization: Bearer ${apiKey || '<your-key>'}`;
+                curl = `curl --request GET \\\n  --url "${serverUrl}/commit?${params}" \\\n  --header 'Authorization: Bearer ${apiKey || '<your-key>'}'`;
+            }
+
+            document.getElementById('commitPreview').textContent = preview;
+            document.getElementById('curlCommand').textContent = curl;
+            currentCurl = curl;
+        }
+
+        // 更新 userdata 请求预览
+        function updateUserdataPreview() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const curl = `curl --request GET \\\n  --url ${serverUrl}/userdata \\\n  --header 'Authorization: Bearer ${apiKey || '<your-key>'}'`;
+            document.getElementById('curlCommand').textContent = curl;
+            currentCurl = curl;
+        }
+
+        // 显示响应元信息
+        function showResponseMeta(status, time, method) {
+            const meta = document.getElementById('responseMeta');
+            const statusClass = status >= 200 && status < 300 ? '' : 'error';
+            meta.innerHTML = `
+                <span class="meta-item meta-method">${method}</span>
+                <span class="meta-item meta-status ${statusClass}">状态: ${status}</span>
+                <span class="meta-item meta-time">耗时: ${time}ms</span>
+            `;
+        }
+
+        // 测试 candidates 接口
+        async function testCandidates() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const method = document.getElementById('candidatesMethod').value;
+            const keys = document.getElementById('candidatesKeys').value || 'nihaoshijie';
+
+            if (!apiKey) {
+                showStatus('请输入 API Key', 'error');
+                return;
+            }
+
+            saveConfig();
+            const startTime = Date.now();
+
+            try {
+                let response;
+                if (method === 'POST') {
+                    response = await fetch(`${serverUrl}/candidates`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({ keys })
+                    });
+                } else {
+                    response = await fetch(`${serverUrl}/candidates?keys=${encodeURIComponent(keys)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`
+                        }
+                    });
+                }
+
+                const data = await response.json();
+                const endTime = Date.now();
+                
+                showResponseMeta(response.status, endTime - startTime, method);
+                document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+                showStatus(`请求完成: ${response.status}`, response.ok ? 'success' : 'error');
+
+            } catch (error) {
+                showResponseMeta('Error', Date.now() - startTime, method);
+                document.getElementById('rawResponse').textContent = error.toString();
+                showStatus(`请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试 commit 接口
+        async function testCommit() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const method = document.getElementById('commitMethod').value;
+            const text = document.getElementById('commitText').value;
+            const isNew = document.getElementById('commitNew').value === 'true';
+            const update = document.getElementById('commitUpdate').value === 'true';
+
+            if (!apiKey) {
+                showStatus('请输入 API Key', 'error');
+                return;
+            }
+
+            if (!text) {
+                showStatus('请输入 text 参数', 'error');
+                return;
+            }
+
+            saveConfig();
+            const startTime = Date.now();
+
+            try {
+                let response;
+                if (method === 'POST') {
+                    response = await fetch(`${serverUrl}/commit`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify({ text, new: isNew, update })
+                    });
+                } else {
+                    const params = new URLSearchParams({ text, new: isNew, update });
+                    response = await fetch(`${serverUrl}/commit?${params}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`
+                        }
+                    });
+                }
+
+                const data = await response.json();
+                const endTime = Date.now();
+                
+                showResponseMeta(response.status, endTime - startTime, method);
+                document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+                showStatus(`请求完成: ${response.status}`, response.ok ? 'success' : 'error');
+
+            } catch (error) {
+                showResponseMeta('Error', Date.now() - startTime, method);
+                document.getElementById('rawResponse').textContent = error.toString();
+                showStatus(`请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 测试 userdata 接口
+        async function testUserdata() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const apiKey = document.getElementById('apiKey').value;
+
+            if (!apiKey) {
+                showStatus('请输入 API Key', 'error');
+                return;
+            }
+
+            saveConfig();
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch(`${serverUrl}/userdata`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                const data = await response.json();
+                const endTime = Date.now();
+                
+                showResponseMeta(response.status, endTime - startTime, 'GET');
+                document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2);
+                showStatus(`请求完成: ${response.status}`, response.ok ? 'success' : 'error');
+
+            } catch (error) {
+                showResponseMeta('Error', Date.now() - startTime, 'GET');
+                document.getElementById('rawResponse').textContent = error.toString();
+                showStatus(`请求失败: ${error.message}`, 'error');
+            }
+        }
+
+        // 复制 curl 命令
+        function copyCurl() {
+            navigator.clipboard.writeText(currentCurl).then(() => {
+                showStatus('curl 命令已复制到剪贴板', 'success');
+            }).catch(err => {
+                showStatus('复制失败: ' + err.message, 'error');
+            });
+        }
+
+        // 页面加载完成后初始化预览
+        setTimeout(() => {
+            updateCandidatesPreview();
+        }, 100);
+    </script>
+</body>
+</html>
